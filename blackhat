@@ -1,0 +1,147 @@
+#!/bin/bash
+
+sl=~/blackhat/scripts
+
+source $sl/color.sh
+source $sl/banner.sh
+
+banner
+
+echo -e "\t${LGREEN}${BOLD}\" Give me six hours to chop down a tree, and I will spend the first four sharpening the axe.\"\n"
+
+help()
+{
+	echo -e "${BOLD}${BLUE}\tUSAGE: ${NORMAL}blackhat [option] [Domain/Ip]\n"
+	echo -e "${BOLD}${YELLOW}\tOPTIONS:\n${NORMAL}"
+	echo -e "\t\t-s:\t\tFind subdomains of a domain"
+	echo -e "\t\t-t:\t\tFind technology used in a domain"
+	echo -e "\t\t-d:\t\tFind hidden files & directories"
+	echo -e "\t\t-a:\t\tFind alive domain from a list of domains"
+	echo -e "\t\t-r:\t\tFind registration details of a domain"
+	echo -e "\t\t-l:\t\tFind all links available in a domain"
+	echo -e "\t\t-b:\t\tFind all broken links available in a domain"
+	echo -e "\t\t-f:\t\tCheck if the domain behind a Firewall or not"
+	echo -e "\t\t-h:\t\tCheck response header"
+	echo -e "\t\t-v:\t\tFinding Virtual Hosts"
+	echo -e "\t\t-spf:\t\tCheck for SPF record"
+	echo -e "\t\t-cms:\t\tDetect type of CMS used"
+	echo -e "\t\t--host:\t\tDiscover hosts in your network"
+	echo -e "\t\t--port:\t\tScan for open ports"
+	echo -e "\t\t-sv:\t\tDetect service and version"
+	echo -e "${BOLD}${CYAN}\tEXAMPLES:\n${NORMAL}"
+	echo -e "\t\t${RED}${BOLD}●${NORMAL} blackhat [-s|-t|-d|-a|-r|-l|-b|-f|-h] vulnweb.com"
+	echo -e "\t\t${RED}${BOLD}●${NORMAL} blackhat --host [IP Range]"	
+	echo -e "\t\t${RED}${BOLD}●${NORMAL} blackhat --port [IP/Domain] [Port Range]"	
+	echo -e "\t\t${RED}${BOLD}●${NORMAL} blackhat -sv [IP/Domain]"	
+
+}	
+
+if [ "$1" == "" ]
+then
+	help
+else
+	case $1 in
+
+	-s) 
+		echo -e "${NORMAL}${BOLD}${YELLOW}\n ● Scanning is in progress:${NORMAL}${BOLD} Scanning subdomains of ${BLINK}${RED}$2${NORMAL}"
+		echo -e "\n" 
+		sleep 2
+		assetfinder -subs-only $2 | sort -u 
+		python $sl/subspotter.py -d $2
+		echo -e "\n${BOLD}${GREEN} Task Completed...${NORMAL}"
+		;;
+	-d) 
+		echo -e "${NORMAL}${BOLD}${YELLOW}\n ● Scanning is in progress:${NORMAL}${BOLD} Scanning hidden files/folders of ${BLINK}${RED}$2${NORMAL}"
+		echo -e "\n" 
+		sleep 2
+		python $sl/dirspotter.py -d $2
+		echo -e "\n${BOLD}${GREEN} Task Completed...${NORMAL}"
+		;;
+	-l) 
+		echo -e "${NORMAL}${BOLD}${YELLOW}\n ● Scanning is in progress:${NORMAL}${BOLD} Scanning all hidden urls of ${BLINK}${RED}$2${NORMAL}"
+		echo -e "\n" 
+		sleep 2
+		python $sl/linkspotter.py $2
+		echo -e "\n${BOLD}${GREEN} Task Completed...${NORMAL}"
+		;;		
+	-a) 
+		echo -ne "${NORMAL}${BOLD}${YELLOW}\n ● Scanning is in progress:${NORMAL}${BOLD} Scanning live domains from list ${BLINK}${RED}$2${NORMAL}"
+		echo -e "\n"
+		sleep 2 
+		bash $sl/alive.sh $2
+		echo -e "\n${BOLD}${GREEN} Task Completed...${NORMAL}"
+		;;
+	-b) 
+		echo -ne "${NORMAL}${BOLD}${YELLOW}\n ● Scanning is in progress:${NORMAL}${BOLD} Scanning all broken links of ${BLINK}${RED}$2${NORMAL}"
+		echo -e "\n" 
+		sleep 2
+		bash $sl/brokenlink.sh $2
+		echo -e "\n${BOLD}${GREEN} Task Completed...${NORMAL}"
+		;;
+	-f) 
+		echo -ne "${NORMAL}${BOLD}${YELLOW}\n ● Scanning is in progress:${NORMAL}${BOLD} Detecting WAF for ${BLINK}${RED}$2${NORMAL}"
+		echo -e "\n" 
+		sleep 2
+		bash $sl/waf.sh $2
+		echo -e "\n${BOLD}${GREEN} Task Completed...${NORMAL}"
+		;;
+	-t) 
+		echo -ne "${NORMAL}${BOLD}${YELLOW}\n ● Scanning is in progress:${NORMAL}${BOLD} Detecting technology used for ${BLINK}${RED}$2${NORMAL}"
+		echo -e "\n"
+		sleep 2 
+ 		bash $sl/webtech.sh $2
+ 		echo -e "\n${BOLD}${GREEN} Task Completed...${NORMAL}"
+ 		;; 
+	-r) 
+		echo -ne "${NORMAL}${BOLD}${YELLOW}\n ● Scanning is in progress:${NORMAL}${BOLD} Scanning registration details for ${BLINK}${RED}$2${NORMAL}"
+		echo -e "\n" 
+		sleep 2
+		bash $sl/whois.sh $2
+		echo -e "\n${BOLD}${GREEN} Task Completed...${NORMAL}"
+		;;
+	-v)
+		echo -ne "${NORMAL}${BOLD}${YELLOW}\n ● Scanning is in progress:${NORMAL}${BOLD} Scanning Virtual Hosts for ${BLINK}${RED}$2${NORMAL}"
+		echo -e "\n" 
+		sleep 2
+		bash $sl/virtualhost.sh $2
+		echo -e "\n${BOLD}${GREEN} Task Completed...${NORMAL}"
+		;;
+				
+	-spf)
+		echo -ne "${NORMAL}${BOLD}${YELLOW}\n ● Scanning is in progress:${NORMAL}${BOLD} Checking SPF record for ${BLINK}${RED}$2${NORMAL}"
+		echo -e "\n"
+		bash $sl/mail_spoof.sh $2
+		echo -e "\n${BOLD}${GREEN} Task Completed...${NORMAL}"
+		;;
+	--host) 	
+		echo -ne "${NORMAL}${BOLD}${YELLOW}\n ● Scanning is in progress:${NORMAL}${BOLD} Scanning for Live hosts in the given range ${BLINK}${RED}$2${NORMAL}"
+		sleep 2
+		python $sl/networkscan.py -t $2
+		echo -e "\n${BOLD}${GREEN} Task Completed...${NORMAL}"
+		;;
+	--port)
+		echo -ne "${NORMAL}${BOLD}${YELLOW}\n ● Scanning is in progress:${NORMAL}${BOLD} Scanning Open Ports for ${BLINK}${RED}$2${NORMAL}"
+		sleep 3
+		python3 $sl/portScanner.py $2 $3
+		echo -e "\n${BOLD}${GREEN} Task Completed...${NORMAL}"
+		;;	
+	-cms)
+		echo -ne "${NORMAL}${BOLD}${YELLOW}\n ● Scanning is in progress:${NORMAL}${BOLD} Detecting CMS for ${BLINK}${RED}$2${NORMAL}"
+		sleep 3
+		bash $sl/cmsdet.sh $2
+		echo -e "\n${BOLD}${GREEN} Task Completed...${NORMAL}"
+		;;		
+	-sv)
+		echo -ne "${NORMAL}${BOLD}${YELLOW}\n ● Scanning is in progress:${NORMAL}${BOLD} Scanning Service & Version for ${BLINK}${RED}$2${NORMAL}\n"
+		bash $sl/serviceVersion.sh $2
+		echo -e "\n${BOLD}${GREEN} Task Completed...${NORMAL}"
+		;;			
+	-h)
+		echo -ne "${NORMAL}${BOLD}${YELLOW}\n ● Scanning is in progress:${NORMAL}${BOLD} Scanning for Response header of ${BLINK}${RED}$2${NORMAL}"
+		sleep 2
+		python $sl/header.py $2
+		echo -e "\n${BOLD}${GREEN} Task Completed...${NORMAL}"
+		;;
+	esac
+fi
+
